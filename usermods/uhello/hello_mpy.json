@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "simple_hello": {
+      "return_type": "NoneType", 
+      "args": [], 
+      "type": "function"
+    }
+  }
+}
