@@ -4,6 +4,7 @@
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/builtin.h"
+#include "hello.h"
 
 /************************** hello fun **************************/
 
@@ -16,6 +17,7 @@ STATIC mp_obj_t uhello_hello(mp_uint_t n_args, const mp_obj_t *args){
         int v = mp_obj_get_int(args[i]);
         printf("%d\n", v);
     }
+    simple_hello();
     return mp_const_none;
 }
 
