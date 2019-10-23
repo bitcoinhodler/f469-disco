@@ -3,7 +3,7 @@ from unittest import TestCase
 from hashlib import sha256
 
 import secp256k1
-from bitcoin.ecc import PrivateKey
+from bitcoin.ecc import PrivateKey, PublicKey
 
 A = 0
 B = 7
@@ -38,10 +38,26 @@ class PrivateKeyTest(TestCase):
         self.assertEqual(sig.r, sig_r)
         self.assertEqual(sig.s, sig_s)
 
-    def test_pubkey(self):
-        pass
+    def test_derive_pubkey(self):
+        secret = b'\x01' * 32
+        sec = b'\x04\x1b\x84\xc5V{\x12d@\x99]>\xd5\xaa\xba\x05e\xd7\x1e\x184`H\x19\xff\x9c\x17\xf5\xe9\xd5\xdd\x07\x8fp\xbe\xaf\x8fX\x8bT\x15\x07\xfe\xd6\xa6B\xc5\xabB\xdf\xdf\x81 \xa7\xf69\xdeQ"\xd4zi\xa8\xe8\xd1'
+
+        private_key = PrivateKey(secret)
+        public_key = private_key.public_key()
+        self.assertEqual(public_key.sec, sec)
 
 class PublicKeyTest(TestCase):
+
+    def test_constructor(self):
+        valid_sec = b'\x04\x1b\x84\xc5V{\x12d@\x99]>\xd5\xaa\xba\x05e\xd7\x1e\x184`H\x19\xff\x9c\x17\xf5\xe9\xd5\xdd\x07\x8fp\xbe\xaf\x8fX\x8bT\x15\x07\xfe\xd6\xa6B\xc5\xabB\xdf\xdf\x81 \xa7\xf69\xdeQ"\xd4zi\xa8\xe8\xd1'
+        invalid_sec = b'\x04\x1b\x84\xc5V{\x12d@\x99]>\xd5\xaa\xba\x05e\xd7\x1e\x184`H\x19\xff\x9c\x17\xf5\xe9\xd5\xdd\x07\x8fp\xbe\xaf\x8fX\x8bT\x15\x07\xfe\xd6\xa6B\xc5\xabB\xdf\xdf\x81 \xa7\xf69\xdeQ"\xd4zi\xa8\xe8\xd2'
+
+        # Valid SEC shouldn't raise
+        PublicKey(valid_sec)
+
+        # Invalid SEC should raise
+        with self.assertRaises(ValueError):
+            PublicKey(invalid_sec)
 
     def test_parse(self):
         pass
@@ -51,5 +67,3 @@ class PublicKeyTest(TestCase):
 
     def test_address(self):
         pass
-
-

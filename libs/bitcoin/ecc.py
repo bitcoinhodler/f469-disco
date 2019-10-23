@@ -23,12 +23,16 @@ class PrivateKey:
         return Signature(rs_bytes)
 
     def public_key(self):
-        pass
+        raw = secp256k1.ec_pubkey_create(self.secret)
+        sec = secp256k1.ec_pubkey_serialize(raw, secp256k1.EC_UNCOMPRESSED)
+        return PublicKey(sec)
 
 class PublicKey:
 
-    def __init__(self, point):
-        self.point = point
+    def __init__(self, sec):
+        # Check it's a valid pubkey
+        secp256k1.ec_pubkey_parse(sec)
+        self.sec = sec
 
     def __eq__(self, other):
         pass
