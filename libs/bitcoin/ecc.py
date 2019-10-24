@@ -24,7 +24,7 @@ class PrivateKey:
 
     def public_key(self):
         raw = secp256k1.ec_pubkey_create(self.secret)
-        sec = secp256k1.ec_pubkey_serialize(raw, secp256k1.EC_UNCOMPRESSED)
+        sec = secp256k1.ec_pubkey_serialize(raw, secp256k1.EC_COMPRESSED)
         return PublicKey(sec)
 
 class PublicKey:
@@ -64,9 +64,6 @@ class PublicKey:
 
     def serialize(self):
         '''SEC serialization'''
-        pass
-
-    def address(self, testnet):
         pass
 
 class Signature:

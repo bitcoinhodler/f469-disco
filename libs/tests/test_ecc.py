@@ -4,6 +4,8 @@ from hashlib import sha256
 
 import secp256k1
 from bitcoin.ecc import PrivateKey, PublicKey
+from bitcoin.helper import hash160
+from bitcoin.script import p2wpkh_script
 
 A = 0
 B = 7
@@ -40,7 +42,7 @@ class PrivateKeyTest(TestCase):
 
     def test_derive_pubkey(self):
         secret = b'\x01' * 32
-        sec = b'\x04\x1b\x84\xc5V{\x12d@\x99]>\xd5\xaa\xba\x05e\xd7\x1e\x184`H\x19\xff\x9c\x17\xf5\xe9\xd5\xdd\x07\x8fp\xbe\xaf\x8fX\x8bT\x15\x07\xfe\xd6\xa6B\xc5\xabB\xdf\xdf\x81 \xa7\xf69\xdeQ"\xd4zi\xa8\xe8\xd1'
+        sec = b'\x03\x1b\x84\xc5V{\x12d@\x99]>\xd5\xaa\xba\x05e\xd7\x1e\x184`H\x19\xff\x9c\x17\xf5\xe9\xd5\xdd\x07\x8f'
 
         private_key = PrivateKey(secret)
         public_key = private_key.public_key()
@@ -66,4 +68,16 @@ class PublicKeyTest(TestCase):
         pass
 
     def test_address(self):
-        pass
+        answer = 'tb1qp3hulh6ksuhhryyk6w6uvmns6l42qxymxw53t5'
+        sec_pubkey = unhexlify('021ade60158012dd6f89059ee76826a96c011a6ee680df2d4566e5f226f5a3db71')
+        script_pubkey = b'00140c6fcfdf56872f719096d3b5c66e70d7eaa0189b'
+
+        script = p2wpkh_script(PublicKey(sec_pubkey))
+        address = script.p2wpkh_address(testnet=True)
+
+        self.assertEqual(answer, address)
+
+
+
+
+
