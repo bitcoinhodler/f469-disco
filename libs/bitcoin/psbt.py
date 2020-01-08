@@ -2,8 +2,6 @@
 
 from .transaction import Transaction, TransactionOutput, _parse
 from . import compact
-from . import bip32
-from . import ec
 from .script import Script
 from . import script
 
@@ -85,11 +83,6 @@ class PSBT:
         
         psbt = cls(tx)
         # now we can go through all the key-values and parse them
-        for k in unknown:
-            # xpub field
-            if k[0] == 0x01:
-                xpub = bip32.HDKey.parse(k[1:])
-                xpubs[xpub] = DerivationPath.parse(unknown.pop(k))
         psbt.unknown = unknown
         psbt.xpubs = xpubs
         # input scopes
@@ -207,7 +200,8 @@ class InputScope(PSBTScope):
 
     def parse_unknowns(self):
         # go through all the unknowns and parse them
-        for k in self.unknown:
+        ukeys = list(self.unknown.keys())
+        for k in ukeys:
             # legacy utxo
             if k == b'\x00':
                 if self.non_witness_utxo is not None or self.witness_utxo is not None:
@@ -220,11 +214,7 @@ class InputScope(PSBTScope):
                 else:
                     self.witness_utxo = TransactionOutput.parse(self.unknown.pop(k))
             elif k[0] == 0x02:
-                pub = ec.PublicKey.parse(k[1:])
-                if pub in self.partial_sigs:
-                    raise ValueError("Duplicated partial sig")
-                else:
-                    self.partial_sigs[pub] = self.unknown.pop(k)
+                raise ValueError("Did not expect partial sig")
             elif k == b'\x03':
                 if self.sighash_type is None:
                     if len(self.unknown[k])!=4:
@@ -243,11 +233,7 @@ class InputScope(PSBTScope):
                 else:
                     raise ValueError("Duplicated witness script")
             elif k[0] == 0x06:
-                pub = ec.PublicKey.parse(k[1:])
-                if pub in self.bip32_derivations:
-                    raise ValueError("Duplicated derivation path")
-                else:
-                    self.bip32_derivations[pub] = DerivationPath.parse(self.unknown.pop(k))
+                raise ValueError("Did not expect derivation path")
             # keys 0x07 (PSBT_IN_FINAL_SCRIPTSIG)
             #      0x08 (PSBT_IN_FINAL_SCRIPTWITNESS),
             #      0x09 (PSBT_IN_POR_COMMITMENT)
@@ -294,7 +280,8 @@ class OutputScope(PSBTScope):
 
     def parse_unknowns(self):
         # go through all the unknowns and parse them
-        for k in self.unknown:
+        ukeys = list(self.unknown.keys())
+        for k in ukeys:
             if k == b'\x00':
                 if self.redeem_script is None:
                     self.redeem_script = Script(self.unknown.pop(k))
@@ -306,11 +293,7 @@ class OutputScope(PSBTScope):
                 else:
                     raise ValueError("Duplicated witness script")
             elif k[0] == 0x02:
-                pub = ec.PublicKey.parse(k[1:])
-                if pub in self.bip32_derivations:
-                    raise ValueError("Duplicated derivation path")
-                else:
-                    self.bip32_derivations[pub] = DerivationPath.parse(self.unknown.pop(k))
+                raise ValueError("Did not expect derivation path 2")
 
     def serialize(self):
         r = b''
