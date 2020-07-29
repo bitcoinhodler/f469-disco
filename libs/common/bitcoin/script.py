@@ -53,7 +53,7 @@ class Script:
         return compact.to_bytes(len(self.data))+self.data
 
     @classmethod
-    def parse(cls, b: bytes) -> cls:
+    def parse(cls, b: bytes):
         stream = io.BytesIO(b)
         script = cls.read_from(stream)
         if len(stream.read(1)) > 0:
@@ -61,7 +61,7 @@ class Script:
         return script
 
     @classmethod
-    def read_from(cls, stream) -> cls:
+    def read_from(cls, stream):
         l = compact.read_from(stream)
         data = stream.read(l)
         if len(data)!=l:
@@ -85,7 +85,7 @@ class Witness:
         return res
 
     @classmethod
-    def parse(cls, b: bytes) -> cls:
+    def parse(cls, b: bytes):
         stream = io.BytesIO(b)
         r = cls.read_from(stream)
         if len(stream.read(1)) > 0:
@@ -93,7 +93,7 @@ class Witness:
         return r
 
     @classmethod
-    def read_from(cls, stream) -> cls:
+    def read_from(cls, stream):
         num = compact.read_from(stream)
         items = []
         for i in range(num):

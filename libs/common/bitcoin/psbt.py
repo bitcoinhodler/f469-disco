@@ -2,8 +2,6 @@
 
 from .transaction import Transaction, TransactionOutput, _parse
 from . import compact
-from . import bip32
-from . import ec
 from .script import Script
 from . import script
 
@@ -57,11 +55,11 @@ class PSBT:
         return r
 
     @classmethod
-    def parse(cls, b: bytes) -> cls:
+    def parse(cls, b: bytes):
         return _parse(cls, b)
 
     @classmethod
-    def read_from(cls, stream) -> cls:
+    def read_from(cls, stream):
         tx = None
         unknown = {}
         xpubs = {}
@@ -87,11 +85,6 @@ class PSBT:
         
         psbt = cls(tx)
         # now we can go through all the key-values and parse them
-        for k in unknown:
-            # xpub field
-            if k[0] == 0x01:
-                xpub = bip32.HDKey.parse(k[1:])
-                xpubs[xpub] = DerivationPath.parse(unknown.pop(k))
         psbt.unknown = unknown
         psbt.xpubs = xpubs
         # input scopes
@@ -156,11 +149,11 @@ class DerivationPath:
         return r
 
     @classmethod
-    def parse(cls, b: bytes) -> cls:
+    def parse(cls, b: bytes):
         return _parse(cls, b)
 
     @classmethod
-    def read_from(cls, stream) -> cls:
+    def read_from(cls, stream):
         fingerprint = stream.read(4)
         derivation = []
         while True:
@@ -221,7 +214,8 @@ class InputScope(PSBTScope):
 
     def parse_unknowns(self):
         # go through all the unknowns and parse them
-        for k in self.unknown:
+        ukeys = list(self.unknown.keys())
+        for k in ukeys:
             # legacy utxo
             if k == b'\x00':
                 if self.non_witness_utxo is not None:
@@ -236,11 +230,7 @@ class InputScope(PSBTScope):
                     self.witness_utxo = TransactionOutput.parse(self.unknown.pop(k))
             # partial signature
             elif k[0] == 0x02:
-                pub = ec.PublicKey.parse(k[1:])
-                if pub in self.partial_sigs:
-                    raise ValueError("Duplicated partial sig")
-                else:
-                    self.partial_sigs[pub] = self.unknown.pop(k)
+                raise ValueError("Did not expect partial sig")
             # hash type
             elif k == b'\x03':
                 if self.sighash_type is None:
@@ -263,11 +253,7 @@ class InputScope(PSBTScope):
                     raise ValueError("Duplicated witness script")
             # bip32 derivation
             elif k[0] == 0x06:
-                pub = ec.PublicKey.parse(k[1:])
-                if pub in self.bip32_derivations:
-                    raise ValueError("Duplicated derivation path")
-                else:
-                    self.bip32_derivations[pub] = DerivationPath.parse(self.unknown.pop(k))
+                raise ValueError("Did not expect derivation path")
             # final scriptsig
             elif k == b'\x07':
                 if self.final_scriptsig is None:
@@ -328,7 +314,8 @@ class OutputScope(PSBTScope):
 
     def parse_unknowns(self):
         # go through all the unknowns and parse them
-        for k in self.unknown:
+        ukeys = list(self.unknown.keys())
+        for k in ukeys:
             # redeem script
             if k == b'\x00':
                 if self.redeem_script is None:
@@ -343,11 +330,7 @@ class OutputScope(PSBTScope):
                     raise ValueError("Duplicated witness script")
             # bip32 derivation
             elif k[0] == 0x02:
-                pub = ec.PublicKey.parse(k[1:])
-                if pub in self.bip32_derivations:
-                    raise ValueError("Duplicated derivation path")
-                else:
-                    self.bip32_derivations[pub] = DerivationPath.parse(self.unknown.pop(k))
+                raise ValueError("Did not expect derivation path 2")
 
     def serialize(self) -> bytes:
         r = b''
